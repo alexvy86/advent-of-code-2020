@@ -1,3 +1,3 @@
-# advent-of-code-2012
+# advent-of-code-2020
 
-Solutions to the 2012 edition of Advent of Code
+Solutions to the 2020 edition of Advent of Code

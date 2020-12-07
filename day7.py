@@ -1,51 +1,39 @@
 from utils import read_lines
-from queue import Queue
+from collections import defaultdict
 import re
 
 container_regex = re.compile(r"(?P<bag_type>\w* \w*) bags")
 contents_regex = re.compile(r"(?P<num>\d*) (?P<bag_type>\w* \w*) bags?")
 
-d = {}
-d2 = {}
+child_to_parent = defaultdict(list)
+parent_to_child = defaultdict(dict)
 
 for line in read_lines(7):
 	pieces = line.split(" contain ")
-	container = container_regex.match(pieces[0])
-	contents = contents_regex.findall(pieces[1])
+	container_bag_type = container_regex.match(pieces[0]).group("bag_type")
 
-	container_key = container.group("bag_type")
-	if container_key not in d2:
-		d2[container_key] = {}
-
-	for entry in contents:
-		key = entry[1]
-		d2[container_key][key] = entry[0]
-		if key not in d:
-			d[key] = []
-		d[key].append(container.group("bag_type"))
+	for entry in contents_regex.findall(pieces[1]):
+		child_bag_type = entry[1]
+		parent_to_child[container_bag_type][child_bag_type] = int(entry[0])
+		child_to_parent[child_bag_type].append(container_bag_type)
 
 outer_bag_types = set()
-
-q = Queue()
-q.put("shiny gold")
-
-while not q.empty():
-	current = q.get()
-	for parent_bag in d.get(current, []):
+q = ["shiny gold"]
+while len(q) > 0:
+	current = q.pop()
+	for parent_bag in child_to_parent[current]:
 		outer_bag_types.add(parent_bag)
-		q.put(parent_bag)
+		q.append(parent_bag)
 
 print(len(outer_bag_types))
 
 num_of_inner_bags = 0
-
-q = Queue()
-q.put("shiny gold")
-while not q.empty():
-	current = q.get()
-	for bag_type, num in d2.get(current, {}).items():
-		num_of_inner_bags += int(num)
-		for i in range(int(num)):
-			q.put(bag_type)
+q = ["shiny gold"]
+while len(q) > 0:
+	current = q.pop()
+	for bag_type, num in parent_to_child[current].items():
+		num_of_inner_bags += num
+		for i in range(num):
+			q.append(bag_type)
 
 print(num_of_inner_bags)
